@@ -35,7 +35,7 @@ public class Socio {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @OneToMany(mappedBy = "socio", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "socio", fetch = FetchType.LAZY)
     private List<Puesto> puestos;
 
     @PrePersist

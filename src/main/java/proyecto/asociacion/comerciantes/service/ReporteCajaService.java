@@ -5,8 +5,9 @@ import proyecto.asociacion.comerciantes.dto.ComprobanteDto;
 import proyecto.asociacion.comerciantes.dto.ReporteCajaDto;
 import proyecto.asociacion.comerciantes.mappers.ComprobanteMapper;
 import proyecto.asociacion.comerciantes.model.ComprobanteEntity;
-import proyecto.asociacion.comerciantes.model.DetalleComprobanteEntity;
+import proyecto.asociacion.comerciantes.model.DetallePagoEntity;
 import proyecto.asociacion.comerciantes.repository.ComprobanteRepository;
+import proyecto.asociacion.comerciantes.repository.DetallePagoRepository;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.Paragraph;
@@ -28,11 +29,14 @@ public class ReporteCajaService {
 
     private final ComprobanteRepository comprobanteRepository;
     private final ComprobanteMapper comprobanteMapper;
+    private final DetallePagoRepository detallePagoRepository;
 
     public ReporteCajaService(ComprobanteRepository comprobanteRepository,
-                              ComprobanteMapper comprobanteMapper) {
+                              ComprobanteMapper comprobanteMapper,
+                              DetallePagoRepository detallePagoRepository) {
         this.comprobanteRepository = comprobanteRepository;
         this.comprobanteMapper = comprobanteMapper;
+        this.detallePagoRepository = detallePagoRepository;
     }
 
     public ReporteCajaDto generarReporte(LocalDate inicio, LocalDate finFecha) {
@@ -50,16 +54,21 @@ public class ReporteCajaService {
                 .map(ComprobanteEntity::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Map<String, BigDecimal> porMetodo = comprobantes.stream()
-                .flatMap(c -> c.getDetalles().stream())
-                .collect(Collectors.groupingBy(
-                        d -> d.getComprobante().getTipo(),
-                        Collectors.reducing(
-                                BigDecimal.ZERO,
-                                DetalleComprobanteEntity::getMontoPagado,
-                                BigDecimal::add
-                        )
-                ));
+        // Desglose por método de pago: el total de cada comprobante se suma
+        // al método del pago que lo cancela (EFECTIVO, YAPE, PLIN, TRANSFERENCIA).
+        Map<Long, String> metodoPorComprobante = new HashMap<>();
+        if (!comprobantes.isEmpty()) {
+            List<Long> ids = comprobantes.stream().map(ComprobanteEntity::getId).toList();
+            for (DetallePagoEntity dp : detallePagoRepository.findByComprobante_IdIn(ids)) {
+                metodoPorComprobante.put(dp.getComprobante().getId(), dp.getPago().getMetodo().name());
+            }
+        }
+
+        Map<String, BigDecimal> porMetodo = new TreeMap<>();
+        for (ComprobanteEntity c : comprobantes) {
+            String metodo = metodoPorComprobante.getOrDefault(c.getId(), "SIN PAGO REGISTRADO");
+            porMetodo.merge(metodo, c.getTotal(), BigDecimal::add);
+        }
 
         ReporteCajaDto dto = new ReporteCajaDto();
         dto.setTotalGeneral(totalGeneral);

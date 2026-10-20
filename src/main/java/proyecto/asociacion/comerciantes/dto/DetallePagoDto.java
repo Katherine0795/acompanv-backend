@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class DetallePagoDto {
     private Long id;
+    private Long idComprobante;
     private ComprobanteDto comprobante;
     private PagoDto pago;
 

@@ -1,5 +1,6 @@
 package proyecto.asociacion.comerciantes.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import proyecto.asociacion.comerciantes.dto.ActualizarUsuarioDto;
@@ -23,7 +24,7 @@ public class AuthController {
 
     // REGISTRAR USUARIO
     @PostMapping("/register")
-    public ResponseEntity<UsuarioEntity> registrar(@RequestBody RegistrarUsuarioDto dto) {
+    public ResponseEntity<UsuarioEntity> registrar(@Valid @RequestBody RegistrarUsuarioDto dto) {
         return ResponseEntity.ok(authService.registrar(dto));
     }
 
@@ -40,7 +41,7 @@ public class AuthController {
 
     // LOGIN
     @PostMapping("/login")
-    public ResponseEntity<UsuarioEntity> login(@RequestBody RegistrarUsuarioDto dto) {
+    public ResponseEntity<UsuarioEntity> login(@Valid @RequestBody RegistrarUsuarioDto dto) {
         return ResponseEntity.ok(
                 authService.login(dto.getUsername(), dto.getPassword())
         );
@@ -64,7 +65,7 @@ public class AuthController {
     // REGISTRAR CON ROL
     @PostMapping("/registrar-con-rol")
     public ResponseEntity<UsuarioEntity> registrarConRol(
-            @RequestBody RegistrarUsuarioConRolDto dto) {
+            @Valid @RequestBody RegistrarUsuarioConRolDto dto) {
 
         return ResponseEntity.ok(authService.registrarConRol(dto));
     }

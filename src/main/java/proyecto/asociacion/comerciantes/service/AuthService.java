@@ -1,5 +1,8 @@
 package proyecto.asociacion.comerciantes.service;
 
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import proyecto.asociacion.comerciantes.dto.RegistrarUsuarioConRolDto;
 import proyecto.asociacion.comerciantes.dto.RegistrarUsuarioDto;
@@ -17,10 +20,13 @@ public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UsuarioRepository usuarioRepository, RolRepository rolRepository) {
+    public AuthService(UsuarioRepository usuarioRepository, RolRepository rolRepository,
+                       PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // REGISTRO
@@ -28,7 +34,7 @@ public class AuthService {
 
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setUsername(dto.getUsername());
-        usuario.setPassword(dto.getPassword()); // luego BCrypt
+        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setEstado(true);
 
         return usuarioRepository.save(usuario);
@@ -52,7 +58,7 @@ public class AuthService {
         if (dto.getPassword() != null &&
                 !dto.getPassword().isBlank()) {
 
-            usuario.setPassword(dto.getPassword());
+            usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
 
         RolEntity rol = rolRepository.findById(dto.getIdRol())
@@ -70,14 +76,14 @@ public class AuthService {
     public UsuarioEntity login(String username, String password) {
 
         UsuarioEntity usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new BadCredentialsException("Usuario o contrasena incorrectos"));
 
-        if (!usuario.getEstado()) {
-            throw new RuntimeException("Usuario inactivo");
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
+            throw new BadCredentialsException("Usuario o contrasena incorrectos");
         }
 
-        if (!usuario.getPassword().equals(password)) {
-            throw new RuntimeException("Password incorrecto");
+        if (!Boolean.TRUE.equals(usuario.getEstado())) {
+            throw new DisabledException("Usuario inactivo");
         }
 
         return usuario;
@@ -103,7 +109,7 @@ public class AuthService {
         // 1. Crear usuario
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setUsername(dto.getUsername());
-        usuario.setPassword(dto.getPassword());
+        usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         usuario.setEstado(true);
 
         // 2. Buscar rol

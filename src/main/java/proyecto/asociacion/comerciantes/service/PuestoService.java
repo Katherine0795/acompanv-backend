@@ -53,6 +53,7 @@ public class PuestoService implements IPuestoService {
                 .map(puestoExistente -> {
                     Puesto puestoActualizado = PuestoMapper.toPuesto(requestDto);
                     puestoActualizado.setId(puestoExistente.getId());
+                    puestoActualizado.setEstado(puestoExistente.isEstado());
 
                     // Si se proporciona un nuevo idSocio, actualizar la relación
                     if (requestDto.getIdSocio() != null) {

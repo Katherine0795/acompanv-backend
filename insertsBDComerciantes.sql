@@ -1,3 +1,6 @@
+-- OBSOLETO: este archivo usa la tabla socio_puesto, que ya no existe.
+-- Use db/mercado_db.sql (esquema + datos de prueba alineados con el backend).
+
 -- Inserts de prueba para mercado_db
 -- Basado en scriptBDComerciantes.sql
 -- 10 registros por tabla

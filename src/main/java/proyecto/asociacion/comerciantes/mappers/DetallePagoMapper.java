@@ -10,6 +10,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface DetallePagoMapper {
     @Mapping(target = "pago", ignore = true)
+    @Mapping(target = "idComprobante", source = "comprobante.id")
     DetallePagoDto toDto(DetallePagoEntity entity);
 
     @Mapping(target = "pago", ignore = true)
